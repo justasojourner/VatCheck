@@ -87,12 +87,12 @@ class LookupVat:
         # which will terminate the program.
         except UnboundLocalError:
             raise UnboundLocalError(f"Program error, self.client attribute has not been assigned before use")
-        # If there is a Zeep exception it is likely to be an *invalid* VAT number, which is different from
-        # a *failed* VAT number lookup, we need to test both.
+        # If there is a Zeep exception it is likely to be an *invalid* VAT number (even though it passes regex check),
+        # which is different from a *failed* VAT number lookup, we need to test both.
         # The 'zeep.exceptions.Fault' exception will not retry - if Zeep gets an exception here it means
         # it was able to connect, and it got back an explicit client failure. So no sense in retrying.
         except zeep.exceptions.Fault as e:
-            result['err_msg'] = f"Zeep exception: {e}"
+            result['err_msg'] = f"SOAP lookup exception: {e}"
             return result
         # Others, catch-all.
         except Exception as e:

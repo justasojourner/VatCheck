@@ -192,7 +192,6 @@ class LookupVat:
             # 'stop_after_attempt' are exceeded then the exception will be passed back to the calling
             # function which will usually be 'do_lookup' in 'check_vat.py'.
             raise RuntimeError(result)
-            # raise zeep.exceptions.Fault(f"{e}: {result['err_msg']}")
 
         # There is a response from VIES and the VAT number is valid
         if response['valid']:

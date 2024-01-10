@@ -136,26 +136,22 @@ class CheckVat:
             # Try to connect to web service
             try:
                 self.lookup_eu_vat.connect()
-            except Exception as err:
+            except Exception as e:
                 # If, after multiple Tenacity retry attempts, a connection to the web service cannot
                 # be established no point in continuing.
-                print(f"Connection to VIES service did not work, the error was:\n{err}")
-                self.result['err_msg'] = f"Could not connect to service, error = {err}"
+                print(f"Connection to VIES service did not work, the error was:\n{e}")
+                self.result['err_msg'] = f"Could not connect to service, error = {e}"
                 return self.result
             # Try lookup(s)
             try:
                 print(f"Looking up vat number {self.vat_no} using EU lookup service.")
                 self.result.update(self.lookup_eu_vat.lookup_vat(self.vat_no, self.result))
             # Error, Zeep client was not assigned in check_eu.py, program cannot continue.
-            except UnboundLocalError as err:
-                self.result['err_msg'] = f"Unrecoverable error, '{err}', program will terminate."
+            except UnboundLocalError as e:
+                self.result['err_msg'] = f"Unrecoverable error, '{e}', program will terminate."
                 return self.result
-            except Exception as err:
-                # print(f"Lookup process for EU country had an error that could not be recovered from.\n"
-                #       f"\tError = {err.args[0]['err_msg']}")
-                # Is this needed/correct
-                # self.result['ret_code'] = err.args[0]['ret_code']
-                self.result['err_msg'] = f"{err.args[0]['err_msg']}"
+            except Exception as e:
+                self.result['err_msg'] = f"{e.args[0]['err_msg']}"
                 return self.result
             else:
                 if self.result['valid']:
@@ -172,9 +168,9 @@ class CheckVat:
             # by the Swiss web service. The Zeep settings for the CH client are set to disable 'keep-alive'.
             try:
                 self.lookup_ch_vat.connect()
-            except Exception as err:
-                print(f"\nTried multiple times to connect without success, the error was:\n{err}")
-                self.result['err_msg'] = f"Could not connect to server, error = {err}"
+            except Exception as e:
+                print(f"\nTried multiple times to connect without success, the error was:\n{e}")
+                self.result['err_msg'] = f"Could not connect to server, error = {e}"
                 return self.result
 
             # Then try lookup
@@ -182,21 +178,21 @@ class CheckVat:
                 print(f"Looking up vat number {self.vat_no} using CH lookup service.")
                 self.result.update(self.lookup_ch_vat.lookup_vat(self.vat_no, self.result))
             # Error, Zeep client was not assigned in check_ch.py, program cannot continue.
-            except UnboundLocalError as err:
-                self.result['err_msg'] = f"Unrecoverable error, '{err}', program will terminate."
+            except UnboundLocalError as e:
+                self.result['err_msg'] = f"Unrecoverable error, '{e}', program will terminate."
                 return self.result
-            except Exception as err:
+            except Exception as e:
                 print(f"\nLookup process for Switzerland had an error that could not be recovered from.\n"
-                      f"\tError = {err}")
-                self.result['err_msg'] = f"Lookup failure, error = {err}"
+                      f"\tError = {e}")
+                self.result['err_msg'] = f"Lookup failure, error = {e}"
                 return self.result
-            # No errors, successful
+            # No errors connecting to service
             else:
                 # Get the actual country name from the country code of the address,
                 # not the country code prefix of the VAT number.
                 if self.result['valid']:
                     self.result['country'] = self.countries[self.result['country_code']]['name']
-                self.result['ret_code'] = 0
+                    self.result['ret_code'] = 0
                 return self.result
 
         # United Kingdom
@@ -205,15 +201,15 @@ class CheckVat:
             try:
                 print(f"Looking up vat number {self.vat_no} using UK lookup service.")
                 self.result.update(self.lookup_uk_vat.lookup_vat(self.vat_no, self.result))
-            except Exception as err:
+            except Exception as e:
                 print(f"\nLookup process for the UK had an error that could not be recovered from.\n"
-                      f"\tError = {err}")
-                self.result['err_msg'] = f"Lookup failure, error = {err}"
+                      f"\tError = {e}")
+                self.result['err_msg'] = f"Lookup failure, error = {e}"
                 return self.result
             else:
                 if self.result['valid']:
                     self.result['country'] = self.countries[self.result['country_code']]['name']
-                self.result['ret_code'] = 0
+                    self.result['ret_code'] = 0
                 return self.result
 
         # Norway
@@ -222,13 +218,13 @@ class CheckVat:
             try:
                 print(f"Looking up vat number {self.vat_no} using NO lookup service.")
                 self.result.update(self.lookup_no_vat.lookup_vat(self.vat_no, self.result))
-            except Exception as err:
-                self.result['err_msg'] = f"{err}"
+            except Exception as e:
+                self.result['err_msg'] = f"{e}"
                 return self.result
             else:
                 if self.result['valid']:
                     self.result['country'] = self.countries[self.result['country_code']]['name']
-                self.result['ret_code'] = 0
+                    self.result['ret_code'] = 0
                 return self.result
 
         # We don't have code to do lookup for the country even though they are in the dict of countries.

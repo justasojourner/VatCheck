@@ -1,7 +1,7 @@
-# import json
 from time import sleep
 from typing import Union
-import json
+# The JSON module is only needed if the raw response code is uncommented and used.
+# import json
 # Third party
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -13,7 +13,6 @@ class LookupVat:
     def __init__(self) -> None:
         self.host = 'api.service.hmrc.gov.uk'
         self.service = '/organisations/vat/check-vat-number/lookup/'
-        # result: dict = {}
         self.country_codes: dict = get_country_name_from_code()
 
     # Tenacity retry decorator, number of attempts = 10, time increases exponentially
