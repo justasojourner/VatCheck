@@ -1,6 +1,7 @@
 # import json
 from time import sleep
 from typing import Union
+import json
 # Third party
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -77,11 +78,11 @@ class LookupVat:
         # Got a connection, now check response status code
         status_code = res.status_code
         if status_code == 200:
-            # # Testing - show raw response
+            # # Show raw response
             # print()
             # print(json.dumps(res.json(), indent=4))
             # print()
-            # # Testing - show raw response
+            # # Show raw response
             result['ret_code'] = 0
             result['valid'] = True
             result['vat_enabled'] = True
@@ -93,8 +94,10 @@ class LookupVat:
                 # Make a dictionary from the JSON
                 address: dict = res.json()['target']['address']
                 street: str = ''
-                # UK addresses are messy, parse address lines, including city, as street.
-                # Unfortunately it is *almost impossible* to get the city out as a separate value.
+                # UK addresses are messy, and basically not parseable, even the official service returns 'line1',
+                # 'line2' etc. so which 'line' is the city is very difficult to determine.
+                # Parse address lines, including city, as street. Unfortunately it is *almost impossible* to get
+                # the city out as a separate value.
                 for address, address_line in address.items():
                     if address[:4] == 'line':
                         street = street + address_line + '\n'

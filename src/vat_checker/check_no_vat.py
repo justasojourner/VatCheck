@@ -102,7 +102,7 @@ class LookupVat:
                 result['ret_code'] = 0
                 result['valid'] = True
                 data = json.loads(res.text)
-                print(f"Company exists in Norwegian company register.")
+                print(f"Company exists in Norwegian company register.\n")
                 result['organisation_no'] = data['organisasjonsnummer']
                 result['company_name'] = data['navn']
                 result['vat_no'] = vat_no

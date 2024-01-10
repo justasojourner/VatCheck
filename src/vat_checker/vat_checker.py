@@ -201,6 +201,7 @@ class CheckVat:
 
         # United Kingdom
         elif self.country_code == 'GB':
+            # Not using SOAP, do not need to connect first
             try:
                 print(f"Looking up vat number {self.vat_no} using UK lookup service.")
                 self.result.update(self.lookup_uk_vat.lookup_vat(self.vat_no, self.result))
@@ -217,6 +218,7 @@ class CheckVat:
 
         # Norway
         elif self.country_code == 'NO':
+            # Not using SOAP, do not need to connect first
             try:
                 print(f"Looking up vat number {self.vat_no} using NO lookup service.")
                 self.result.update(self.lookup_no_vat.lookup_vat(self.vat_no, self.result))
@@ -272,43 +274,5 @@ def main():
         print(result)
 
 
-def lookup_list():
-    """
-    Do a demonstration lookup of a range of VAT numbers from different countries
-
-    :return: None
-    """
-    vat_numbers = [
-        'NL803130582B01',
-        'CHE110599817',
-        'NO964784477',
-        'SK2021805764',
-        'NO920966586',
-        'ATU15575606',
-        'FI22877188',
-        'NO896674072',
-        'GB713 0050 01',
-        'NO977203082',
-        'LU20260743',
-        'DK18966239',
-        'GB183298868',
-        'NO971231238',
-        'SE556789701101',
-    ]
-    print(f'\nLooking up VAT numbers for a range of countries...\n')
-
-    # Create instance
-    check = CheckVat()
-
-    for vat_number in vat_numbers:
-        result = check.do_lookup(vat_number)
-        if result['ret_code'] != 0:
-            print(f"Lookup for {vat_number} failed, error message {result['err_msg']}")
-        else:
-            print(result)
-    print('\nEnd of lookups')
-
-
 if __name__ == '__main__':
     main()
-    # lookup_list()

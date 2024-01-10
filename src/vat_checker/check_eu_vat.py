@@ -199,10 +199,10 @@ class LookupVat:
             result['valid'] = True
             result['vat_enabled'] = True
             result['country_code'] = response['countryCode']
-            # TEMP
-            print("\nRaw response...")
-            print(response)
-            # TEMP
+            # # CHECK RAW RESPONSE
+            # print("\nRaw response...")
+            # print(response)
+            # # CHECK RAW RESPONSE
             # Get address regex and parse address line if available
             address_regex = self.address_regex_dict[country_code]
             if address_regex is not None:
