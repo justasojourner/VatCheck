@@ -1,10 +1,11 @@
 # Standard library
 import re
 # Application
-import check_eu_vat
+# import soap_check_eu_vat
 import check_ch_vat
 import check_uk_vat
 import check_no_vat
+import new_check_eu_vat
 
 
 class CheckVat:
@@ -21,7 +22,8 @@ class CheckVat:
         self.result: dict = {}
         # Instantiate all the VAT service lookup classes, a connection check will be run on the SOAP services
         try:
-            self.lookup_eu_vat = check_eu_vat.LookupVat()
+            # self.lookup_eu_vat = check_eu_vat.LookupVat()
+            self.lookup_eu_vat = new_check_eu_vat.LookupVat()
             self.lookup_ch_vat = check_ch_vat.LookupVat()
             self.lookup_no_vat = check_no_vat.LookupVat()
             self.lookup_uk_vat = check_uk_vat.LookupVat()
@@ -133,25 +135,31 @@ class CheckVat:
         # Step through lookups, if no lookup available advise.
         # EU country
         if self.countries[self.country_code]['eu']:
-            # Try to connect to web service
-            try:
-                self.lookup_eu_vat.connect()
-            except Exception as e:
-                # If, after multiple Tenacity retry attempts, a connection to the web service cannot
-                # be established no point in continuing.
-                print(f"Connection to VIES service did not work, the error was:\n{e}")
-                self.result['err_msg'] = f"Could not connect to service, error = {e}"
-                return self.result
+            # The new REST API service does not need a connection pre-check
+            # # Try to connect to web service
+            # try:
+            #     self.lookup_eu_vat.connect()
+            # except Exception as e:
+            #     # If, after multiple Tenacity retry attempts, a connection to the web service cannot
+            #     # be established no point in continuing.
+            #     print(f"Connection to VIES service did not work, the error was:\n{e}")
+            #     self.result['err_msg'] = f"Could not connect to service, error = {e}"
+            #     return self.result
+
             # Try lookup(s)
             try:
                 print(f"Looking up vat number {self.vat_no} using EU lookup service.")
                 self.result.update(self.lookup_eu_vat.lookup_vat(self.vat_no, self.result))
             # Error, Zeep client was not assigned in check_eu.py, program cannot continue.
             except UnboundLocalError as e:
-                self.result['err_msg'] = f"Unrecoverable error, '{e}', program will terminate."
+                self.result['err_msg'] = f"\nUnrecoverable error, '{e}', in SOAP module program will terminate.\n"
                 return self.result
+            # Final 'catch all' exception, SOAP services can be finicky. A case of how we might get here is
+            # the VIES service is down and the WSDL is unavailable. Results in this error page if the WSDL URL is
+            # navigated to — https://sorry.ec.europa.eu
             except Exception as e:
-                self.result['err_msg'] = f"{e.args[0]['err_msg']}"
+                print(f"\nUnrecoverable error, '{e}', program will terminate.\n")
+                self.result['err_msg'] = f"{e.args[0]}"
                 return self.result
             else:
                 if self.result['valid']:
