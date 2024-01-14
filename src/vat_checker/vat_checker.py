@@ -1,11 +1,10 @@
 # Standard library
 import re
 # Application
-# import soap_check_eu_vat
 import check_ch_vat
 import check_uk_vat
 import check_no_vat
-import new_check_eu_vat
+import check_eu_vat
 
 
 class CheckVat:
