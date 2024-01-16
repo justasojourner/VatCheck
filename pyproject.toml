@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vat_checker"
+version = "2023.0.0"
+dependencies = [
+  "zeep>=4.2.1",
+  "requests>=2.31.0",
+  "tenacity>=8.2.3",
+]
+requires-python = ">=3.12"
+authors = [
+  {name = "Justasojourner", email = ""},
+]
+maintainers = [
+  {name = "Justasojourner", email = ""},
+]
+description = "European VAT Number validator and company information lookup"
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+keywords = ["vat", "check", "VIES", "EUR", "Europe"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python"
+]
+
+[project.urls]
+Homepage = "https://github.com/justasojourner/VatCheck.git"
+Documentation = "https://github.com/justasojourner/VatCheck.git"
+Repository = "https://github.com/justasojourner/VatCheck.git"
+"Bug Tracker" = "https://github.com/justasojourner/VatCheck/issues"
+Changelog = "https://github.com/justasojourner/VatCheck/blob/master/CHANGELOG.md"

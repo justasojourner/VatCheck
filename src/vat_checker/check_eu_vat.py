@@ -4,16 +4,22 @@ import json
 # Third party
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-# Application
-from vat_utils import get_country_name_from_code
 
 
 class LookupVat:
+    """
+    Class to handle VAT lookup requests for EU member states. The lookup API has been changed from SOAP
+    to REST which is more up-to-date and simpler to process.
+    The following URL has (basic) technical information.
+    https://ec.europa.eu/taxation_customs/vies/#/technical-information
+    """
     def __init__(self) -> None:
         self.host = 'ec.europa.eu'
         self.service = '/taxation_customs/vies/rest-api/check-vat-number'
-        self.country_codes: dict = get_country_name_from_code()
-        self.vat_query: Dict[str, str,] = {
+        # The *whole* dictionary (converted to JSON format) has to be passed to the REST connection,
+        # but only 'countryCode' and 'vatNumber' are used. In fact if any (dummy) data is passed via
+        # other fields the query will fail.
+        self.vat_query: Dict[str, str] = {
             "countryCode": "",
             "vatNumber": "",
             "requesterMemberStateCode": "",
@@ -162,12 +168,14 @@ class LookupVat:
                             print(f"\t{result['postal_code']} {result['city']}")
                             print(f"\t{result['country_code']}\n")
                 else:
-                    print(f"The member state {result['country_code']} does not supply company name or address details.")
+                    print(f"\nThe VAT number is valid — but the member state, {result['country_code']}, "
+                          f"does not supply company name or address details.\n")
                 # Only change ret_code from -1 to 0 if all processing is OK.
                 result['ret_code'] = 0
                 return result
             else:
-                print(f"The VAT number {vat_no} is not valid")
+                print(f"\nThe VAT number {vat_no} is not valid.\n")
+                result['err_msg'] = "VAT number is not valid"
                 return result
         elif 400 <= status_code <= 499:
             # 404 is the defined return code for successful connection but VAT number not found,
@@ -202,7 +210,6 @@ def main():
         'country_code': None,
         'country': None,
     }
-
     try:
         lookup = LookupVat()
         res = lookup.lookup_vat(vat_no, result)

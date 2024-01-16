@@ -1,7 +1,7 @@
 # European VAT Checker
 
 ## Introduction
-This is a Python VAT number validator for European VATs. It includes EU member states which provide one API interface, VIES, which links to the national VAT number lookup system of the respective EU countries, as well as other non-EU European countries such as the UK, Switzerland, Norway.
+This is a Python VAT number validator and company & address information for European VATs. It includes EU member states for which there is one API service, VIES, which links to the national VAT number lookup system of the respective EU countries, as well as other non-EU European countries such as the UK, Switzerland, Norway.
 
 It is only for European countries.
 
@@ -12,7 +12,8 @@ The system provides:
 
 1. Simple (initial) validation by checking a submitted VAT number against a regex of the country's VAT number format.
 2. If the submitted VAT number passes initial validation it is then checked for validity with the relevant online VAT number checking service (API). If a service is unavailable the VAT check will terminate. 
-3. It checks (using data returned by online services) whether a VAT number is actually valid for VAT purposes as well as, for most countries, returning the company name and address. Some countries, for example Germany and Spain, do not return any information about the company.  
+3. It checks (using data returned by online services) whether a VAT number is actually valid for VAT purposes as well as, for most countries, returning the company name and address. Some countries, for example Germany and Spain, do not return any information about the company.
+4. Addresses returned are parsed wherever possible into street, postal code, city and country. For EU countries returned via the VIES service which have differently formatted address strings there is a regex for each country which parses the address. Address parsing is not possible for UK addresses due to, well, UK addresses.    
 
 ## Install
 Clone the GitHub repository, it is assumed that Python best practices are followed and that the application will run in a virtual environment. The pyproject.toml file lists all required dependencies and Python version. 
