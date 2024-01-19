@@ -30,7 +30,7 @@ class LookupVat:
         Connect to Swiss government web service.
         :return: Nothing, the class attribute 'self.client' will be set.
         """
-        print("Connecting to Swiss government VAT lookup web service...")
+        print("Connecting to Swiss government VAT lookup SOAP web service...")
         try:
             self.client = zeep.Client(self.wdsl, settings=self.settings)
         # If the URL is invalid no point in retrying
@@ -183,7 +183,7 @@ class LookupVat:
                 elif 'foreignZipCode' in response[0]['organisation']['address'][0]['_value_1'][0]:
                     result['postal_code'] = \
                         response[0]['organisation']['address'][0]['_value_1'][0]['foreignZipCode']
-                print(f"\nCompany Name: {result['company_name']}")
+                print(f"Company Name: {result['company_name']}")
                 print(f"Address:")
                 print(f"\t{result['street']}")
                 print(f"\t{result['postal_code']} {result['city']}")

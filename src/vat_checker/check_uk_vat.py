@@ -112,7 +112,7 @@ class LookupVat:
                         result['country'] = self.country_codes[result['country_code']]
 
             # Print the result
-            print(f"\nVAT number {vat_no} is valid, company data:")
+            print(f"VAT number {vat_no} is valid, company data:")
             print(result['company_name'])
             print(result['street'])
             print(result['postal_code'])

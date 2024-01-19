@@ -20,14 +20,14 @@ class CheckVat:
         self.countries: dict = {}
         self.result: dict = {}
         # Instantiate all the VAT service lookup classes, a connection check will be run on the SOAP services
+        # for the VIES EU service the member state status check 'check_eu_service_status' will be also called.
         try:
             self.lookup_eu_vat = check_eu_vat.LookupVat()
             self.lookup_ch_vat = check_ch_vat.LookupVat()
             self.lookup_no_vat = check_no_vat.LookupVat()
             self.lookup_uk_vat = check_uk_vat.LookupVat()
         except Exception as e:
-            print(f"There was an exception, {e}, connecting to a VAT lookup web service")
-            raise RuntimeError(f"There was an exception, {e}, connecting to a VAT lookup web service")
+            raise RuntimeError(e)
         self.load_countries_dict()
 
     def load_countries_dict(self) -> None:
@@ -122,7 +122,7 @@ class CheckVat:
             self.country_type = "non-EU country"
 
         if match:
-            print(f"\nThe VAT number, {vat_no}, matches the VAT number format for the {self.country_type}, "
+            print(f"The VAT number, {vat_no}, matches the VAT number format for the {self.country_type}, "
                   f"{self.country_code}, {self.countries[self.country_code]['name']}.\n")
         else:
             print(f"The VAT number, {vat_no}, does NOT match the VAT number format for country {self.country_code}.\n")
@@ -135,7 +135,7 @@ class CheckVat:
         if self.countries[self.country_code]['eu']:
             # Try lookup(s)
             try:
-                print(f"Looking up vat number {self.vat_no} using new VIES REST API EU lookup service.")
+                print(f"Looking up vat number {self.vat_no} using new VIES REST API EU lookup service.\n")
                 self.result.update(self.lookup_eu_vat.lookup_vat(self.vat_no, self.result))
             except Exception as e:
                 print(f"\nUnrecoverable error, '{e}', program will terminate.\n")
@@ -163,7 +163,7 @@ class CheckVat:
 
             # Then try lookup
             try:
-                print(f"Looking up vat number {self.vat_no} using CH lookup service.")
+                print(f"Looking up vat number {self.vat_no} using CH lookup service.\n")
                 self.result.update(self.lookup_ch_vat.lookup_vat(self.vat_no, self.result))
             # Error, Zeep client was not assigned in check_ch.py, program cannot continue.
             except UnboundLocalError as e:
@@ -187,7 +187,7 @@ class CheckVat:
         elif self.country_code == 'GB':
             # Not using SOAP, do not need to connect first
             try:
-                print(f"Looking up vat number {self.vat_no} using UK lookup service.")
+                print(f"Looking up vat number {self.vat_no} using UK lookup service.\n")
                 self.result.update(self.lookup_uk_vat.lookup_vat(self.vat_no, self.result))
             except Exception as e:
                 print(f"\nLookup process for the UK had an error that could not be recovered from.\n"
@@ -204,7 +204,7 @@ class CheckVat:
         elif self.country_code == 'NO':
             # Not using SOAP, do not need to connect first
             try:
-                print(f"Looking up vat number {self.vat_no} using NO lookup service.")
+                print(f"Looking up vat number {self.vat_no} using NO lookup service.\n")
                 self.result.update(self.lookup_no_vat.lookup_vat(self.vat_no, self.result))
             except Exception as e:
                 self.result['err_msg'] = f"{e}"
@@ -247,15 +247,17 @@ def main():
     print(banner)
     vat_no = input('Enter a VAT number to look up: ')
     # Create instance
-    check = CheckVat()
-    result = check.do_lookup(vat_no)
-
-    if result['ret_code'] != 0:
-        raise SystemExit(f"The VAT number lookup failed — see error message. Cancelling processing.\n"
-                         f"\tError code: {result['ret_code']}\n"
-                         f"\tError message: {result['err_msg']}")
-    else:
-        print(result)
+    try:
+        check = CheckVat()
+        result = check.do_lookup(vat_no)
+        if result['ret_code'] != 0:
+            raise SystemExit(f"The VAT number lookup failed — see error message. Cancelling processing.\n"
+                             f"\tError code: {result['ret_code']}\n"
+                             f"\tError message: {result['err_msg']}")
+        else:
+            print(result)
+    except Exception as e:
+        print(f"There was an exception, {e}, creating the CheckVat instance or running the VAT query.")
 
 
 if __name__ == '__main__':

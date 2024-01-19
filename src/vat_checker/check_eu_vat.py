@@ -4,6 +4,8 @@ import json
 # Third party
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+# Application
+import check_eu_service_status
 
 
 class LookupVat:
@@ -32,6 +34,10 @@ class LookupVat:
         }
         self.address_regex_dict: dict = {}
         self.load_address_dict()
+        try:
+            self.countries: list = check_eu_service_status.check_service_status()
+        except RuntimeError as e:
+            raise RuntimeError(f"There was an exception, {e}, connecting to the VIES status checker.")
 
     def load_address_dict(self):
         """
@@ -93,8 +99,18 @@ class LookupVat:
 
         self.vat_query["countryCode"] = vat_no[:2]
         self.vat_query["vatNumber"] = vat_no[2:]
-        json_data = json.dumps(self.vat_query)
 
+        # Check country against the list self.countries which was populated at class init. We run it at class
+        # init in case there are multiple lookups for EU counties. If member state service is down there is
+        # no point in continuing.
+        if self.vat_query["countryCode"] in self.countries:
+            print(f"The VAT lookup service for member state {self.vat_query['countryCode']} is not available.")
+            result['err_msg'] = (f"The VAT lookup service for member state {self.vat_query['countryCode']} "
+                                 f"is not available.")
+            return result
+
+        # Member state
+        json_data = json.dumps(self.vat_query)
         headers = {
             "user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
             'Content-type': 'application/json',
@@ -123,7 +139,7 @@ class LookupVat:
                   f"Exception = {e}")
             raise requests.RequestException(f"{e}")
         except Exception as e:
-            print(f"There was a general exception querying the GB VAT lookup service.\n"
+            print(f"There was a general exception querying the VIES VAT lookup service.\n"
                   f"Exception = {e}")
             raise RuntimeError(f"{e}")
 
@@ -162,7 +178,7 @@ class LookupVat:
                             return result
                         else:
                             result['has_details'] = True
-                            print(f"\nCompany Name: {result['company_name']}")
+                            print(f"Company Name: {result['company_name']}")
                             print(f"Address:")
                             print(f"\t{result['street']}")
                             print(f"\t{result['postal_code']} {result['city']}")
@@ -178,20 +194,15 @@ class LookupVat:
                 result['err_msg'] = "VAT number is not valid"
                 return result
         elif 400 <= status_code <= 499:
-            # 404 is the defined return code for successful connection but VAT number not found,
-            # so we return unchanged ret_code = -1
-            print(f"Status code: {status_code}")
-            print(f"URL invalid")
-            return result
+            print(f"URL for VIES lookup invalid, status code: {status_code}")
+            raise ConnectionError(f"URL for VIES lookup invalid, status code: {status_code}")
         elif 500 <= status_code <= 599:
-            print(f"Status code: {status_code}")
-            print(f"Server error")
-            return result
+            print(f"VIES server error, status code: {status_code}")
+            raise ConnectionError(f"VIES server error, status code: {status_code}")
         else:
             # Otherwise some other error causing failure, ret_code changed to 1
-            print(f"Status code: {status_code}")
-            print(f"The lookup process for {vat_no} failed, likely invalid data.")
-            return result
+            print(f"Other error connecting to VIES system, status code: {status_code}")
+            raise ConnectionError(f"VIES server connection error, status code: {status_code}")
 
 
 def main():
