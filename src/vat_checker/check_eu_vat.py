@@ -74,7 +74,7 @@ class LookupVat:
             'NO': r'',
             'PL': r'',
             'PT': r'^(?P<street>.*)\n(?P<municipality>\S+)\n(?P<postal_code>\S+)\s+(?P<city>.*)$',
-            'RO': None,
+            'RO': r'^(?P<street>.*)$',
             'RS': r'',
             'SE': r'^(?P<street>.*)\n(?P<postal_code>\S+\s\S+)\s+(?P<city>.*)$',
             'SI': r'^(?P<street>.*),\s+(?P<postal_code>\d{4})\s+(?P<city>.*)$',
@@ -146,11 +146,11 @@ class LookupVat:
         # Got a connection, now check response status code
         status_code = res.status_code
         if status_code == 200:
-            # # Show raw response
+            # # Show raw response - for analysing address regexes
             # print()
-            # print(json.dumps(res.json(), indent=4))
+            # print(json.dumps(res.json(), ensure_ascii=False, indent=4).encode('utf-8').decode())
             # print()
-            # # Show raw response
+            # # Show raw response - for analysing address regexes
             if res.json()['valid']:
                 result['valid'] = True
                 result['vat_enabled'] = True
@@ -162,16 +162,16 @@ class LookupVat:
                     try:
                         match = re.match(rf"{address_regex}", res.json()['address'])
                     except Exception as e:
-                        print(f"There was an error = {e}.")
+                        print(f"There was an error,{e}, matching the address to the country address regex.")
                         return result
                     if match:
                         try:
-                            if match.group('street'):
+                            if 'street' in match.groupdict():
                                 result['street'] = match.group('street').strip()
-                            if match.group('postal_code'):
+                            if 'postal_code' in match.groupdict():
                                 result['postal_code'] = match.group('postal_code').strip()
-                            if match.group('city'):
-                                result['city'] = match.group('city').strip()
+                            if 'city' in match.groupdict():
+                                result['city'] = result['city'] = match.group('city').strip()
                         except IndexError as e:
                             print(f"There was an error, '{e}', parsing the address.\n"
                                   f"Is the address regex for country {result['country_code']} defined?")
