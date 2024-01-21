@@ -54,7 +54,7 @@ class LookupVat:
             'BE': r'^(?P<street>.*)\n(?P<postal_code>\S+)\s+(?P<city>.*)$',
             'BG': r'^(?P<street>.*),\s(?P<city>.*)\s(?P<postal_code>\d+)$',
             'CY': r'^(?P<street>.*)\n(?P<postal_code>\S+)\s+(?P<city>.*)$',
-            'CZ': r'',
+            'CZ': r'^(?P<street>.*)\n(?P<suburb>.*)\n(?P<postal_code>\d*\s\d*)\s{2}(?P<city>.*)$',
             'DE': None,
             'DK': r'^(?P<street>.*)\n(?P<postal_code>\S+)\s+(?P<city>.*)\n$',
             'EE': r'^(?P<street>.*)\s{3}(?P<postal_code>\d+)\s+(?P<city>.*)$',
@@ -64,7 +64,7 @@ class LookupVat:
             'FR': r'^(?P<street>.*)\n(?P<postal_code>\d+)\s+(?P<city>.*)$',
             'HR': r'^(?P<street>.*),\s+(?P<city>.*),\s+(?P<postal_code>.*)$',
             'HU': r'^(?P<street>.*)\s+(?P<postal_code>\d+)\s+(?P<city>.*)$',
-            'IE': r'',
+            'IE': r'^(?P<street>.*)$',
             'IT': r'^(?P<street>.*)\n(?P<postal_code>\d+)\s+(?P<city>.*)\s\S{2}\n$',
             'LT': r'^(?P<street>.*),\s+(?P<city>.*),\s+((?P<postal_code>LT\d{5})|(?P<province>.*))$',
             'LU': r'^(?P<street>.*)\n(?P<postal_code>\S+)\s+(?P<city>.*)$',
@@ -72,14 +72,14 @@ class LookupVat:
             'MT': r'',
             'NL': r'^\n(?P<street>.*)\n(?P<postal_code>\S+)\s+(?P<city>.*)\n$',
             'NO': r'',
-            'PL': r'',
+            'PL': r'^(?P<street>.*)\n(?P<postal_code>\S+)\s+(?P<city>.*)$',
             'PT': r'^(?P<street>.*)\n(?P<municipality>\S+)\n(?P<postal_code>\S+)\s+(?P<city>.*)$',
             'RO': r'^(?P<street>.*)$',
             'RS': r'',
             'SE': r'^(?P<street>.*)\n(?P<postal_code>\S+\s\S+)\s+(?P<city>.*)$',
             'SI': r'^(?P<street>.*),\s+(?P<postal_code>\d{4})\s+(?P<city>.*)$',
             'SK': r'^(?P<street>.*)\n(?P<postal_code>\S+)\s(?P<city>.*)\n(?P<country>.*)$',
-            'XI': r'',
+            'XI': r'^(?P<street>.*\n.*\n.*\n.*\n.*)\n(?P<postal_code>.*)$',
         }
 
     # Tenacity retry decorator, number of attempts = 10, time increases exponentially
@@ -156,6 +156,12 @@ class LookupVat:
                 result['vat_enabled'] = True
                 result['country_code'] = res.json()['countryCode']
                 # Get address regex and parse address line if available
+                if result['country_code'] not in self.address_regex_dict:
+                    print(f"The country code, {result['country_code']}, does not have a (valid) address regex. "
+                          f"Please correct and try again.\n")
+                    result['err_msg'] = (f"The country code, {result['country_code']}, does not have a "
+                                         f"(valid) address regex.")
+                    return result
                 address_regex = self.address_regex_dict[result['country_code']]
                 if address_regex is not None:
                     result['company_name'] = res.json()['name']
@@ -172,7 +178,7 @@ class LookupVat:
                                 result['postal_code'] = match.group('postal_code').strip()
                             if 'city' in match.groupdict():
                                 result['city'] = result['city'] = match.group('city').strip()
-                        except IndexError as e:
+                        except Exception as e:
                             print(f"There was an error, '{e}', parsing the address.\n"
                                   f"Is the address regex for country {result['country_code']} defined?")
                             return result
@@ -180,9 +186,9 @@ class LookupVat:
                             result['has_details'] = True
                             print(f"Company Name: {result['company_name']}")
                             print(f"Address:")
-                            print(f"\t{result['street']}")
-                            print(f"\t{result['postal_code']} {result['city']}")
-                            print(f"\t{result['country_code']}\n")
+                            print(f"{result['street']}")
+                            print(f"{result['postal_code']} {result['city']}")
+                            print(f"{result['country_code']}\n")
                 else:
                     print(f"\nThe VAT number is valid — but the member state, {result['country_code']}, "
                           f"does not supply company name or address details.\n")
